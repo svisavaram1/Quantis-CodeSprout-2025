@@ -15,7 +15,7 @@ Built with **HTML, CSS (Tailwind), and JavaScript** — no frameworks required.
 ---
 
 ## 🚀 Live Demo
-👉 [View Live Demo](https://your-username.github.io/quantis/)  
+👉 [View Live Demo](https://svisavaram1.github.io/)  
 
 ---
 
