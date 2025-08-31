@@ -24,24 +24,7 @@ Built with **HTML, CSS (Tailwind), and JavaScript** — no frameworks required.
 
 ---
 
-## 📸 Screenshots
-*(replace with your own)*
-
-![Portfolio Screenshot](screenshots/portfolio.png)  
-![Stock Screenshot](screenshots/stock.png)
-
----
-
 ## 🎥 Demo Video
 ▶️ [Watch on YouTube](https://youtube.com/your-demo-video-link)
 
 ---
-
-## ⚙️ Run Locally
-```bash
-# Clone this repo
-git clone https://github.com/your-username/quantis.git
-cd quantis
-
-# Open in browser
-open index.html
