@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Stock Risk Engine</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<style>
+  .glow-border {
+    position: relative;
+    border-radius: 1rem; 
+    overflow: hidden;
+    padding: 2px; 
+  }
+  .glow-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(270deg, 
+      #ff00ff, #00ffff, #00ff00, #ffff00, #ff0000, #ff00ff);
+    background-size: 600% 600%;
+    animation: glowing 10s ease infinite;
+    z-index: 0;
+  }
+  .glow-border > * {
+    position: relative;
+    z-index: 1;
+    border-radius: inherit;
+  }
+  @keyframes glowing {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  background-color: black !important;
+  color: white !important;
+  border-color: #666 !important; 
+}
+input::placeholder {
+  color: #aaa;
+}
+
+.search-btn {
+  background-color: #111;     
+  color: #ccc;                  
+  border: 1px solid #333;     
+  padding: 0.5rem 1rem;
+  border-radius: 0 0.5rem 0.5rem 0; 
+  transition: all 0.3s ease;
+}
+
+.search-btn:hover {
+  background-color: #222;
+  color: white;
+  border-color: #666;
+  box-shadow: 0 0 6px rgba(255,255,255,0.2);
+}
+
+.action-btn {
+  background-color: #111;       
+  color: #ccc;                  
+  border: 1px solid #333;       
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;        
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.action-btn:hover {
+  background-color: #222;
+  color: white;
+  border-color: #666;
+  box-shadow: 0 0 6px rgba(255,255,255,0.2);
+}
+
+/* Autofill fix */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0px 1000px black inset !important; 
+  -webkit-text-fill-color: white !important;
+  caret-color: white !important; 
+  border: 1px solid #666 !important;
+}
+</style>
+</head>
+<body class="bg-black text-white min-h-screen flex flex-col">
+
+ 
+<nav class="bg-black border-b border-gray-700 fixed top-0 left-0 right-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-16">
+      <div class="flex-shrink-0 text-3xl font-bold text-white" style="font-family: 'Georgia', serif;">Quantis</div>
+      <div class="flex space-x-8">
+        <button onclick="showSection('frontPage')" 
+          class="relative text-gray-300 hover:text-white transition px-2 pb-1 
+                 after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 
+                 after:w-0 after:bg-white after:transition-all after:duration-300 hover:after:w-full">
+          Home
+        </button>
+        <button onclick="showSection('singleStockWrapper')" 
+          class="relative text-gray-300 hover:text-white transition px-2 pb-1 
+                 after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 
+                 after:w-0 after:bg-white after:transition-all after:duration-300 hover:after:w-full">
+          Single Stock
+        </button>
+        <button onclick="showSection('portfolioSectionWrapper')" 
+          class="relative text-gray-300 hover:text-white transition px-2 pb-1 
+                 after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 
+                 after:w-0 after:bg-white after:transition-all after:duration-300 hover:after:w-full">
+          Portfolio
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+ 
+<main class="flex-1 pt-20 flex flex-col items-center px-6">
+
+   
+<div id="frontPage" 
+     class="relative flex flex-col items-center justify-center flex-1 w-full h-screen bg-black overflow-hidden">
+  
+   
+  <div class="absolute inset-0">
+    <img src="image.png" 
+         alt="Background" 
+         class="w-full h-full object-cover object-center">
+    
+     
+    <div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-black to-transparent"></div>
+     
+    <div class="absolute bottom-0 left-0 w-full h-40 bg-gradient-to-t from-black to-transparent"></div>
+  </div>
+
+   
+  <div class="relative z-10 text-center px-6">
+    <h1 class="text-6xl font-bold text-white mb-6" style="font-family: 'Georgia', serif;">Quantis</h1>
+    <p class="text-lg text-gray-300">make your trading dreams a reality</p>
+  </div>
+</div>
+
+   
+  <div id="singleStockWrapper" class="hidden w-full flex flex-col flex-1 glow-border">
+    <div id="singleStockSection" class="w-full flex flex-col flex-1 bg-black rounded-xl">
+      <div class="w-full flex items-center border-b border-gray-700 p-3 bg-black rounded-t-xl">
+        <input id="tickerInput" class="flex-1 px-4 py-2 bg-black text-white border border-gray-600 rounded-l" placeholder="Search for stocks history by ticker (AAPL)">
+        <button id="lookupBtn" class="action-btn rounded-r">
+  <svg xmlns="http://www.w3.org/2000/svg" 
+       class="w-4 h-4 text-gray-400" 
+       fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+          d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1110.5 3a7.5 7.5 0 016.15 13.65z" />
+  </svg>
+  <span class="hidden sm:inline">Search</span>
+</button>
+      </div>
+
+      <div class="flex gap-4 mb-2 mt-4 justify-center">
+        <button class="stockRangeBtn px-4 py-2 rounded bg-gray-800 text-white hover:bg-gray-700" data-range="1M">1M</button>
+        <button class="stockRangeBtn px-4 py-2 rounded bg-gray-800 text-white hover:bg-gray-700" data-range="3M">3M</button>
+        <button class="stockRangeBtn px-4 py-2 rounded bg-gray-800 text-white hover:bg-gray-700" data-range="1Y">1Y</button>
+        <button class="stockRangeBtn px-4 py-2 rounded bg-gray-800 text-white hover:bg-gray-700" data-range="MAX">MAX</button>
+      </div>
+
+      <div class="flex flex-1 w-full">
+        <div class="flex-1 flex items-center justify-center border-r border-gray-700">
+          <canvas id="stockChart" class="w-full h-full"></canvas>
+        </div>
+        <div class="w-1/4 flex flex-col items-center justify-center text-center p-6">
+          <h3 class="text-lg mb-2 text-gray-300">Net Risk Score<br>(0–10)</h3>
+          <p id="stockRiskOutput" class="text-6xl font-bold text-white">--</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+   
+  <div id="portfolioSectionWrapper" class="hidden w-full flex flex-col flex-1 glow-border">
+    <div id="portfolioSection" class="w-full flex flex-col flex-1 bg-black rounded-xl">
+       
+      <div class="w-full flex items-center border-b border-gray-700 p-3 bg-black rounded-t-xl">
+        <input id="portfolioTicker" class="flex-1 px-4 py-2 bg-black text-white border border-gray-600 rounded-l" placeholder="Ticker (MSFT)">
+        <input id="portfolioShares" type="number" class="w-28 px-4 py-2 bg-black text-white border border-gray-600" placeholder="Shares">
+        <button id="addPortfolioBtn" class="action-btn rounded-r">
+  <svg xmlns="http://www.w3.org/2000/svg" 
+       class="w-4 h-4 text-gray-400" 
+       fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+          d="M12 4v16m8-8H4" />
+  </svg>
+  <span class="hidden sm:inline">Add</span>
+</button>
+        <div class="ml-6 text-lg">Risk Score: <span id="portfolioRiskOutput" class="font-bold">--</span></div>
+      </div>
+
+       
+      <div class="w-full max-w-5xl mx-auto mt-6">
+        <h3 class="text-xl font-semibold mb-2">Your Portfolio</h3>
+        <div id="portfolioTableContainer" class="text-white"></div>
+      </div>
+
+       
+      <div class="flex-1 w-full flex flex-col items-center justify-center mt-6">
+        <canvas id="portfolioChart" class="w-full h-[400px]"></canvas>
+        <div class="flex gap-4 my-4 justify-center">
+          <button class="portfolioRangeBtn px-4 py-2 rounded bg-gray-800 text-white hover:bg-gray-700" data-range="1M">1M</button>
+          <button class="portfolioRangeBtn px-4 py-2 rounded bg-gray-800 text-white hover:bg-gray-700" data-range="3M">3M</button>
+          <button class="portfolioRangeBtn px-4 py-2 rounded bg-gray-800 text-white hover:bg-gray-700" data-range="1Y">1Y</button>
+          <button class="portfolioRangeBtn px-4 py-2 rounded bg-gray-800 text-white hover:bg-gray-700" data-range="MAX">MAX</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+AOS.init();
+
+let stockChartInstance, portfolioChartInstance;
+let stockDataByTicker = {};
+let portfolio = [];
+
+ 
+function downsampleData(arr, step) {
+  return arr.filter((_, i) => i % step === 0);
+}
+function randomColor(){ return "#" + Math.floor(Math.random()*16777215).toString(16); }
+
+ 
+async function loadCSV() {
+  const res = await fetch("all_stocks_5yr.csv");
+  const text = await res.text();
+  const rows = text.trim().split("\n").slice(1);
+  rows.forEach(r => {
+    const [date, open, high, low, close, volume, ticker] = r.split(",");
+    if (!stockDataByTicker[ticker]) stockDataByTicker[ticker] = [];
+    stockDataByTicker[ticker].push({date, price: parseFloat(close)});
+  });
+  for (let ticker in stockDataByTicker) stockDataByTicker[ticker].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  attachEventListeners();
+}
+loadCSV();
+
+function fetchStockData(ticker){
+  if(!stockDataByTicker[ticker]) throw new Error("Ticker not found");
+  const s = stockDataByTicker[ticker];
+  return {labels:s.map(d=>d.date), prices:s.map(d=>d.price)};
+}
+
+ 
+function lookupStock(){
+  const ticker = document.getElementById("tickerInput").value.toUpperCase();
+  if(!ticker) return;
+  drawSingleStock(ticker);
+}
+function drawSingleStock(ticker, range="MAX"){
+  try {
+    let data = fetchStockData(ticker);
+    let labels = [...data.labels];
+    let prices = [...data.prices];
+
+    if(range==="1M"){ labels = labels.slice(-22); prices = prices.slice(-22); }
+    if(range==="3M"){ labels = labels.slice(-66); prices = prices.slice(-66); }
+    if(range==="1Y"){ labels = labels.slice(-252); prices = prices.slice(-252); }
+    if(range==="MAX"){
+      const step = Math.ceil(labels.length / 300);
+      labels = downsampleData(labels, step);
+      prices = downsampleData(prices, step);
+    }
+
+    if(stockChartInstance) stockChartInstance.destroy();
+    const ctx = document.getElementById("stockChart").getContext("2d");
+    stockChartInstance = new Chart(ctx, {
+      type: "line",
+      data: { labels, datasets:[{ 
+        label: ticker, 
+        data: prices, 
+        borderColor:"white", 
+        fill:false, 
+        pointRadius:3, 
+        pointHoverRadius:5 
+      }] },
+      options: { responsive:true, plugins:{legend:{labels:{color:"white"}}}, scales:{x:{ticks:{color:"white"}},y:{ticks:{color:"white"}}} }
+    });
+
+    const latest = prices[prices.length-1];
+    const volatility = (Math.max(...prices) - Math.min(...prices)) / latest;
+    const risk = Math.min(volatility * 10, 10).toFixed(2);
+    document.getElementById("stockRiskOutput").innerText = risk;
+  } catch(e){ alert(e.message); }
+}
+function setStockRange(range){
+  const ticker = document.getElementById("tickerInput").value.toUpperCase();
+  if(!ticker) return;
+  drawSingleStock(ticker, range);
+}
+
+ 
+function addToPortfolio(){
+  const ticker=document.getElementById("portfolioTicker").value.toUpperCase();
+  const shares=parseInt(document.getElementById("portfolioShares").value);
+  if(!ticker || isNaN(shares) || shares<=0) return;
+  try {
+    const data=fetchStockData(ticker);
+    const existing = portfolio.find(s=>s.ticker===ticker);
+    if(existing){ existing.shares+=shares; existing.data=data; }
+    else{ portfolio.push({ticker, shares, data, color:randomColor()}); }
+    updatePortfolioUI();
+  } catch(e){ alert(e.message); }
+}
+function removeFromPortfolio(ticker){ portfolio=portfolio.filter(s=>s.ticker!==ticker); updatePortfolioUI(); }
+function setPortfolioRange(range){
+  portfolio.forEach(stock=>{
+    const full=fetchStockData(stock.ticker);
+    let labels=[...full.labels], prices=[...full.prices];
+    if(range==="1M"){labels=labels.slice(-22); prices=prices.slice(-22);}
+    if(range==="3M"){labels=labels.slice(-66); prices=prices.slice(-66);}
+    if(range==="1Y"){labels=labels.slice(-252); prices=prices.slice(-252);}
+    if(range==="MAX"){
+      const step = Math.ceil(labels.length / 300);
+      labels = downsampleData(labels, step);
+      prices = downsampleData(prices, step);
+    }
+    stock.data={labels, prices};
+  });
+  updatePortfolioUI();
+}
+function drawPortfolioChart(){
+  if(portfolioChartInstance) portfolioChartInstance.destroy();
+  if(!portfolio.length) return;
+  const labels=portfolio[0].data.labels;
+  const datasets=portfolio.map(s=>({
+    label:s.ticker,
+    data:s.data.prices,
+    borderColor:s.color,
+    fill:false,
+    pointRadius:3,
+    pointHoverRadius:5
+  }));
+  const ctx=document.getElementById("portfolioChart").getContext("2d");
+  portfolioChartInstance=new Chart(ctx,{type:"line",data:{labels,datasets},options:{responsive:true,plugins:{legend:{labels:{color:"white"}}},scales:{x:{ticks:{color:"white"}},y:{ticks:{color:"white"}}}}});
+}
+function calculatePortfolioRisk(){
+  if(!portfolio.length){ document.getElementById("portfolioRiskOutput").innerText="--"; return; }
+  let totalVal=0, weightedVol=0;
+  portfolio.forEach(s=>{ const latest=s.data.prices[s.data.prices.length-1]; const val=latest*s.shares; totalVal+=val; const vol=(Math.max(...s.data.prices)-Math.min(...s.data.prices))/latest; weightedVol+=vol*val; });
+  weightedVol/=totalVal;
+  const risk=Math.min(weightedVol*10,10).toFixed(2);
+  document.getElementById("portfolioRiskOutput").innerText=risk;
+}
+function renderPortfolioTable(){
+  const container = document.getElementById("portfolioTableContainer");
+  container.innerHTML = "";
+  if(!portfolio.length){
+    container.innerText = "Your portfolio is empty.";
+    return;
+  }
+  const table = document.createElement("table");
+  table.className = "w-full border-collapse text-center border border-gray-700";
+  const thead = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+  ["Ticker","Shares","Price","Total","Risk","Actions"].forEach(t=>{
+    const th = document.createElement("th");
+    th.innerText = t;
+    th.className = "p-2 bg-gray-800 border border-gray-700";
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  let totalValue = 0;
+  let weightedVolSum = 0;
+
+  portfolio.forEach((s)=>{
+    if(!s.data || !s.data.prices.length) return;
+    const latest = s.data.prices[s.data.prices.length-1];
+    const total = latest * s.shares;
+    const vol = (Math.max(...s.data.prices) - Math.min(...s.data.prices)) / latest;
+    const risk = Math.min(vol*10,10).toFixed(2);
+
+    totalValue += total;
+    weightedVolSum += vol * total;
+
+    const row = document.createElement("tr");
+    [s.ticker, s.shares, `$${latest.toFixed(2)}`, `$${total.toFixed(2)}`, risk].forEach(v=>{
+      const td = document.createElement("td");
+      td.innerText = v;
+      td.className = "p-2 border border-gray-700";
+      row.appendChild(td);
+    });
+
+    const tdBtn = document.createElement("td");
+    tdBtn.className = "p-2 border border-gray-700";
+    const btn = document.createElement("button");
+    btn.innerText = "Remove";
+    btn.className = "px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700";
+    btn.onclick = ()=>removeFromPortfolio(s.ticker);
+    tdBtn.appendChild(btn);
+    row.appendChild(tdBtn);
+    tbody.appendChild(row);
+  });
+
+  const summaryRow = document.createElement("tr");
+  summaryRow.className = "font-bold bg-gray-900";
+  const overallRisk = Math.min((weightedVolSum / totalValue) * 10, 10).toFixed(2);
+  ["TOTAL", "", "", `$${totalValue.toFixed(2)}`, overallRisk, ""].forEach(v=>{
+    const td = document.createElement("td");
+    td.innerText = v;
+    td.className = "p-2 border border-gray-700";
+    summaryRow.appendChild(td);
+  });
+  tbody.appendChild(summaryRow);
+  table.appendChild(tbody);
+  container.appendChild(table);
+  AOS.refresh();
+}
+function updatePortfolioUI(){ drawPortfolioChart(); calculatePortfolioRisk(); renderPortfolioTable(); }
+function attachEventListeners(){
+  document.getElementById("lookupBtn").onclick=()=>lookupStock();
+  document.querySelectorAll(".stockRangeBtn").forEach(b=>b.onclick=()=>setStockRange(b.dataset.range));
+  document.getElementById("addPortfolioBtn").onclick=()=>addToPortfolio();
+  document.querySelectorAll(".portfolioRangeBtn").forEach(b=>b.onclick=()=>setPortfolioRange(b.dataset.range));
+}
+ 
+function showSection(sectionId) {
+  document.getElementById("frontPage").classList.add("hidden");
+  document.getElementById("singleStockWrapper").classList.add("hidden");
+  document.getElementById("portfolioSectionWrapper").classList.add("hidden");
+  document.getElementById(sectionId).classList.remove("hidden");
+}
+</script>
+</body>
+</html>
